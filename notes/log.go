@@ -31,6 +31,6 @@ func (l Log) initiailzeMarkdown(parentFolder string) error {
 
 	openURL(logPath)
 
-	_, err = fmt.Fprintf(file, "<!-- Created: %s --> \n", l.Created.Format("2006-01-02"))
+	_, err = fmt.Fprintf(file, "<!-- Created: %s --> \n", l.Created)
 	return err
 }

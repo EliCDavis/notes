@@ -27,7 +27,7 @@ type Task struct {
 	Name    string
 	Path    string
 	Created time.Time
-	History []TaskStatusChange `json:"history"`
+	History []*TaskStatusChange `json:"history"`
 }
 
 func (t Task) initiailzeMarkdown(parentFolder string) error {
@@ -46,6 +46,6 @@ func (t Task) initiailzeMarkdown(parentFolder string) error {
 
 	openURL(markdownPath)
 
-	_, err = fmt.Fprintf(file, "<!-- Created: %s --> \n", t.Created.Format("2006-01-02"))
+	_, err = fmt.Fprintf(file, "<!-- Created: %s --> \n", t.Created)
 	return err
 }

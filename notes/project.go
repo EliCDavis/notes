@@ -25,8 +25,8 @@ type Project struct {
 	LogsPath  string `json:"logPath"`
 	TasksPath string `json:"taskPath"`
 
-	Logs  []Log  `json:"logs"`
-	Tasks []Task `json:"tasks"`
+	Logs  []*Log  `json:"logs"`
+	Tasks []*Task `json:"tasks"`
 
 	// The path to this project on disk
 	loadedPath string
@@ -93,7 +93,7 @@ func (p *Project) Compile(writer io.Writer) error {
 
 func (p *Project) NewLog(tags []string) error {
 	t := time.Now()
-	log := Log{
+	log := &Log{
 		Created: t,
 		Path:    t.Format("2006-01-02"),
 		Tags:    sanitizeTags(tags),
@@ -110,11 +110,11 @@ func (p *Project) NewLog(tags []string) error {
 
 func (p *Project) NewTask(name string) error {
 	t := time.Now()
-	task := Task{
+	task := &Task{
 		Created: t,
 		Name:    name,
 		Path:    strconv.Itoa(len(p.Tasks) + 1),
-		History: make([]TaskStatusChange, 0),
+		History: make([]*TaskStatusChange, 0),
 	}
 
 	err := task.initiailzeMarkdown(filepath.Join(filepath.Dir(p.loadedPath), p.TasksPath))
