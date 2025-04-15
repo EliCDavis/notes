@@ -24,7 +24,7 @@ foo@bar:MyExampleProject$ notes project compile # Compile notes to single markdo
 
 #### Create
 
-```bash
+```
 NAME:
    notes project new - Creates a new project
 
@@ -44,7 +44,7 @@ notes project new "My Project"
 
 #### Compile
 
-```bash
+```
 NAME:
    notes project compile - compiles project into a single file
 
@@ -66,7 +66,7 @@ notes project compile
 
 #### New
 
-```bash
+```
 NAME:
    notes log new - Creates a new log
 
@@ -87,7 +87,7 @@ notes log new
 
 #### New
 
-```bash
+```
 NAME:
    notes task new - Creates a new task
 
@@ -107,7 +107,7 @@ notes task new --name "My Task"
 
 #### Update
 
-```bash
+```
 NAME:
    notes task update - update a task
 
@@ -132,7 +132,7 @@ notes task update --task 1 name "New Task Name"
 
 #### List
 
-```bash
+```
 NAME:
    notes task list - lists all tasks
 
