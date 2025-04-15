@@ -2,8 +2,10 @@ package notes
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -19,9 +21,12 @@ func LoadProject(projectPath string) (*Project, error) {
 }
 
 type Project struct {
-	Name     string `json:"name"`
-	LogsPath string `json:"logPath"`
-	Logs     []Log  `json:"logs"`
+	Name      string `json:"name"`
+	LogsPath  string `json:"logPath"`
+	TasksPath string `json:"taskPath"`
+
+	Logs  []Log  `json:"logs"`
+	Tasks []Task `json:"tasks"`
 
 	// The path to this project on disk
 	loadedPath string
@@ -38,12 +43,60 @@ func (p Project) SetupFS(parentFolder string) error {
 	return SaveJSON(filepath.Join(folder, DefaultProjectFile), p)
 }
 
+func (p *Project) Compile(writer io.Writer) error {
+	fmt.Fprintf(writer, "# %s\n\n", p.Name)
+
+	fmt.Fprint(writer, "## Tasks\n\n")
+	for _, task := range p.Tasks {
+
+		taskName := task.Name
+		if taskName == "" {
+			taskName = "[Unnamed]"
+		}
+
+		fmt.Fprintf(writer, "### %s\n\n", taskName)
+		fmt.Fprintf(writer, "*Created: %s*\n\n", task.Created)
+
+		for _, item := range task.History {
+			fmt.Fprintf(writer, "* %s: %s*\n", item.Status, item.Time)
+		}
+
+		if len(task.History) > 0 {
+			fmt.Fprint(writer, "\n")
+		}
+
+		descriptionPath := filepath.Join(filepath.Dir(p.loadedPath), p.TasksPath, task.Path, taskFileName)
+		description, err := os.ReadFile(descriptionPath)
+		if err != nil {
+			return err
+		}
+		writer.Write(description)
+		fmt.Fprint(writer, "\n")
+	}
+
+	fmt.Fprint(writer, "## Logs\n\n")
+	for _, log := range p.Logs {
+
+		fmt.Fprintf(writer, "### %s\n\n", log.Path)
+		fmt.Fprintf(writer, "*Created: %s*\n\n", log.Created)
+
+		logPath := filepath.Join(filepath.Dir(p.loadedPath), p.LogsPath, log.Path, logFileName)
+		logData, err := os.ReadFile(logPath)
+		if err != nil {
+			return err
+		}
+		writer.Write(logData)
+		fmt.Fprint(writer, "\n")
+	}
+	return nil
+}
+
 func (p *Project) NewLog(tags []string) error {
 	t := time.Now()
 	log := Log{
-		Time: t,
-		Path: t.Format("2006-01-02"),
-		Tags: sanitizeTags(tags),
+		Created: t,
+		Path:    t.Format("2006-01-02"),
+		Tags:    sanitizeTags(tags),
 	}
 
 	err := log.initiailzeMarkdown(filepath.Join(filepath.Dir(p.loadedPath), p.LogsPath))
@@ -52,6 +105,24 @@ func (p *Project) NewLog(tags []string) error {
 	}
 
 	p.Logs = append(p.Logs, log)
+	return nil
+}
+
+func (p *Project) NewTask(name string) error {
+	t := time.Now()
+	task := Task{
+		Created: t,
+		Name:    name,
+		Path:    strconv.Itoa(len(p.Tasks) + 1),
+		History: make([]TaskStatusChange, 0),
+	}
+
+	err := task.initiailzeMarkdown(filepath.Join(filepath.Dir(p.loadedPath), p.TasksPath))
+	if err != nil {
+		return fmt.Errorf("error creating task for project %s: %w", p.Name, err)
+	}
+
+	p.Tasks = append(p.Tasks, task)
 	return nil
 }
 

@@ -6,6 +6,7 @@ import (
 
 	plog "github.com/EliCDavis/notes/cmd/notes/log"
 	"github.com/EliCDavis/notes/cmd/notes/project"
+	"github.com/EliCDavis/notes/cmd/notes/task"
 	"github.com/urfave/cli/v2"
 )
 
@@ -21,6 +22,7 @@ func main() {
 		Commands: []*cli.Command{
 			project.Command(),
 			plog.Command(),
+			task.Command(),
 		},
 	}
 

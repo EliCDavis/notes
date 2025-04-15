@@ -19,6 +19,16 @@ func newCommand() *cli.Command {
 				Usage: "path to place project",
 				Value: "./",
 			},
+			&cli.StringFlag{
+				Name:  "logs",
+				Usage: "path to logs",
+				Value: "logs",
+			},
+			&cli.StringFlag{
+				Name:  "tasks",
+				Usage: "path to tasks",
+				Value: "tasks",
+			},
 		},
 		Action: func(ctx *cli.Context) error {
 			args := ctx.Args()
@@ -27,7 +37,9 @@ func newCommand() *cli.Command {
 			}
 
 			newProject := notes.Project{
-				Name: args.First(),
+				Name:      args.First(),
+				LogsPath:  ctx.String("logs"),
+				TasksPath: ctx.String("tasks"),
 			}
 
 			return newProject.SetupFS(ctx.String("path"))

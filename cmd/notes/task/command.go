@@ -1,4 +1,4 @@
-package log
+package task
 
 import (
 	"github.com/EliCDavis/notes/cmd/notes/flags"
@@ -7,8 +7,8 @@ import (
 
 func Command() *cli.Command {
 	return &cli.Command{
-		Name:  "log",
-		Usage: "Create and edit logs",
+		Name:  "task",
+		Usage: "Create and edit tasks",
 		Flags: []cli.Flag{
 			flags.Project,
 		},

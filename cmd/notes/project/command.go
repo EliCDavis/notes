@@ -8,6 +8,7 @@ func Command() *cli.Command {
 		Usage: "Project management functionality",
 		Subcommands: []*cli.Command{
 			newCommand(),
+			compileCommand(),
 		},
 	}
 }
