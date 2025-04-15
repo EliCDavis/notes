@@ -1,7 +1,8 @@
-package task
+package topic
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/EliCDavis/notes/cmd/notes/flags"
@@ -11,10 +12,9 @@ import (
 func newCommand() *cli.Command {
 	return &cli.Command{
 		Name:      "new",
-		Usage:     "Creates a new task",
+		Usage:     "Creates a new topic",
 		Args:      true,
-		ArgsUsage: "[Task Name]",
-		Flags:     []cli.Flag{},
+		ArgsUsage: "[Topic Name]",
 		Action: func(ctx *cli.Context) error {
 			project, err := flags.LoadProject(ctx)
 			if err != nil {
@@ -22,12 +22,16 @@ func newCommand() *cli.Command {
 			}
 
 			args := ctx.Args()
-			if args.Len() > 1 {
-				return errors.New("expected 0 or 1 argument for task name")
+			if args.Len() != 1 {
+				return errors.New("expected 1 argument for topic name")
 			}
 
 			name := strings.TrimSpace(args.First())
-			if err = project.NewTask(name); err != nil {
+			if name == "" {
+				return fmt.Errorf("invalid name: %s", args.First())
+			}
+
+			if err = project.NewTopic(name); err != nil {
 				return err
 			}
 

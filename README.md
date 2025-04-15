@@ -14,11 +14,35 @@ go install ./cmd/notes
 foo@bar:~$ notes project new "My Example Project"
 foo@bar:~$ cd MyExampleProject
 foo@bar:MyExampleProject$ notes log new # Create a new daily log
+foo@bar:MyExampleProject$ notes meeting new # Create meeting notes
+foo@bar:MyExampleProject$ notes topic new "Some Topic" # Create a new topic
 foo@bar:MyExampleProject$ notes task new "Task to Complete" # Create a new task
 foo@bar:MyExampleProject$ notes project compile # Compile notes to single markdown
 ```
 
 ## Commands
+
+```
+NAME:
+   notes - Manage a collection of notes
+
+USAGE:
+   notes [global options] command [command options]
+
+AUTHOR:
+   Eli C Davis
+
+COMMANDS:
+   project  Project management functionality
+   log      Create and edit logs
+   task     Create and edit tasks
+   meeting  Create and edit meetings
+   topic    Create and edit topics
+   help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --help, -h  show help
+```
 
 ### Project
 
@@ -92,7 +116,7 @@ NAME:
    notes task new - Creates a new task
 
 USAGE:
-   notes task new [command options]
+   notes task new [command options] [Task Name]
 
 OPTIONS:
    --name value
@@ -102,7 +126,7 @@ OPTIONS:
 Example: 
 
 ```bash 
-notes task new --name "My Task"
+notes task new "My Task"
 ```
 
 #### Update

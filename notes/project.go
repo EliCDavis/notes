@@ -21,12 +21,17 @@ func LoadProject(projectPath string) (*Project, error) {
 }
 
 type Project struct {
-	Name      string `json:"name"`
-	LogsPath  string `json:"logPath"`
-	TasksPath string `json:"taskPath"`
+	Name string `json:"name"`
 
-	Logs  []*Log  `json:"logs"`
-	Tasks []*Task `json:"tasks"`
+	LogsPath     string `json:"logPath"`
+	TasksPath    string `json:"taskPath"`
+	MeetingsPath string `json:"meetingPath"`
+	TopicsPath   string `json:"topicPath"`
+
+	Logs     []*Log     `json:"logs"`
+	Tasks    []*Task    `json:"tasks"`
+	Meetings []*Meeting `json:"meetings"`
+	Topics   []*Topic   `json:"topics"`
 
 	// The path to this project on disk
 	loadedPath string
@@ -41,6 +46,24 @@ func (p Project) SetupFS(parentFolder string) error {
 	}
 
 	return SaveJSON(filepath.Join(folder, DefaultProjectFile), p)
+}
+
+func (p *Project) ListTasks(out io.Writer) error {
+	for i, task := range p.Tasks {
+		status := "Created"
+		statusTime := task.Created
+		if len(task.History) > 0 {
+			item := task.History[len(task.History)-1]
+			status = string(item.Status)
+			statusTime = item.Time
+		}
+
+		_, err := fmt.Fprintf(out, "[%d] %-10s %s - %s\n", i, status, statusTime.Format("2006-01-02 15:04"), task.Name)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (p *Project) Compile(writer io.Writer) error {
@@ -71,6 +94,36 @@ func (p *Project) Compile(writer io.Writer) error {
 			return err
 		}
 		writer.Write(description)
+		fmt.Fprint(writer, "\n")
+	}
+
+	fmt.Fprint(writer, "## Meetings\n\n")
+	for _, meeting := range p.Meetings {
+
+		fmt.Fprintf(writer, "### %s\n\n", meeting.Created.Format("2006-01-02 15:04"))
+		fmt.Fprintf(writer, "*Created: %s*\n\n", meeting.Created)
+
+		logPath := filepath.Join(filepath.Dir(p.loadedPath), p.MeetingsPath, meeting.Path, meetingFileName)
+		logData, err := os.ReadFile(logPath)
+		if err != nil {
+			return err
+		}
+		writer.Write(logData)
+		fmt.Fprint(writer, "\n")
+	}
+
+	fmt.Fprint(writer, "## Topics\n\n")
+	for _, topic := range p.Topics {
+
+		fmt.Fprintf(writer, "### %s\n\n", topic.Name)
+		fmt.Fprintf(writer, "*Created: %s*\n\n", topic.Created)
+
+		logPath := filepath.Join(filepath.Dir(p.loadedPath), p.TopicsPath, topic.Path, topicFileName)
+		logData, err := os.ReadFile(logPath)
+		if err != nil {
+			return err
+		}
+		writer.Write(logData)
 		fmt.Fprint(writer, "\n")
 	}
 
@@ -108,6 +161,22 @@ func (p *Project) NewLog(tags []string) error {
 	return nil
 }
 
+func (p *Project) NewMeeting() error {
+	t := time.Now()
+	meeting := &Meeting{
+		Created: t,
+		Path:    t.Format("2006-01-02 15 04"),
+	}
+
+	err := meeting.initiailzeMarkdown(filepath.Join(filepath.Dir(p.loadedPath), p.MeetingsPath))
+	if err != nil {
+		return fmt.Errorf("error creating meeting for project %s: %w", p.Name, err)
+	}
+
+	p.Meetings = append(p.Meetings, meeting)
+	return nil
+}
+
 func (p *Project) NewTask(name string) error {
 	t := time.Now()
 	task := &Task{
@@ -123,6 +192,22 @@ func (p *Project) NewTask(name string) error {
 	}
 
 	p.Tasks = append(p.Tasks, task)
+	return nil
+}
+
+func (p *Project) NewTopic(name string) error {
+	topic := &Topic{
+		Created: time.Now(),
+		Name:    name,
+		Path:    removeNonAlphanumeric(name),
+	}
+
+	err := topic.initiailzeMarkdown(filepath.Join(filepath.Dir(p.loadedPath), p.TopicsPath))
+	if err != nil {
+		return fmt.Errorf("error creating topic for project %s: %w", p.Name, err)
+	}
+
+	p.Topics = append(p.Topics, topic)
 	return nil
 }
 

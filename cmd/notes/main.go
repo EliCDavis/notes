@@ -5,8 +5,10 @@ import (
 	"os"
 
 	plog "github.com/EliCDavis/notes/cmd/notes/log"
+	"github.com/EliCDavis/notes/cmd/notes/meeting"
 	"github.com/EliCDavis/notes/cmd/notes/project"
 	"github.com/EliCDavis/notes/cmd/notes/task"
+	"github.com/EliCDavis/notes/cmd/notes/topic"
 	"github.com/urfave/cli/v2"
 )
 
@@ -23,6 +25,8 @@ func main() {
 			project.Command(),
 			plog.Command(),
 			task.Command(),
+			meeting.Command(),
+			topic.Command(),
 		},
 	}
 
