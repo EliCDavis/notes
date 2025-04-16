@@ -36,7 +36,7 @@ func updateCommand() *cli.Command {
 
 					args := ctx.Args()
 					if args.Len() != 1 {
-						return errors.New("Expected name")
+						return errors.New("expected name")
 					}
 
 					project.Tasks[ctx.Int("task")-1].Name = args.First()
@@ -45,8 +45,10 @@ func updateCommand() *cli.Command {
 			},
 
 			{
-				Name:  "status",
-				Usage: "Update the status of the task",
+				Name:      "status",
+				Usage:     "Update the status of the task",
+				Args:      true,
+				ArgsUsage: "[start | stop | complete | abandon] [reason]",
 				Action: func(ctx *cli.Context) error {
 					project, err := flags.LoadProject(ctx)
 					if err != nil {
@@ -54,8 +56,8 @@ func updateCommand() *cli.Command {
 					}
 
 					args := ctx.Args()
-					if args.Len() != 1 {
-						return errors.New("Expected name")
+					if args.Len() == 0 {
+						return errors.New("expected status")
 					}
 
 					var newStatus notes.TaskStatus
@@ -76,10 +78,16 @@ func updateCommand() *cli.Command {
 						return fmt.Errorf("unrecognized status '%s'", args.First())
 					}
 
+					reason := ""
+					if args.Len() > 1 {
+						reason = args.Get(1)
+					}
+
 					task := project.Tasks[ctx.Int("task")-1]
 					task.History = append(task.History, &notes.TaskStatusChange{
 						Status: newStatus,
 						Time:   time.Now(),
+						Reason: reason,
 					})
 					return project.Save()
 				},

@@ -21,6 +21,7 @@ const (
 type TaskStatusChange struct {
 	Status TaskStatus
 	Time   time.Time
+	Reason string
 }
 
 type Task struct {

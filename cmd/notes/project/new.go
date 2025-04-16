@@ -39,6 +39,16 @@ func newCommand() *cli.Command {
 				Usage: "path to topics",
 				Value: "topics",
 			},
+			&cli.StringFlag{
+				Name:  "images",
+				Usage: "path to images",
+				Value: "images",
+			},
+			&cli.StringFlag{
+				Name:  "builds",
+				Usage: "path to compiled project reports",
+				Value: "builds",
+			},
 		},
 		Action: func(ctx *cli.Context) error {
 			args := ctx.Args()
@@ -52,6 +62,8 @@ func newCommand() *cli.Command {
 				TasksPath:    ctx.String("tasks"),
 				TopicsPath:   ctx.String("topics"),
 				MeetingsPath: ctx.String("meetings"),
+				ImagesPath:   ctx.String("images"),
+				BuildsPath:   ctx.String("builds"),
 			}
 
 			return newProject.SetupFS(ctx.String("path"))

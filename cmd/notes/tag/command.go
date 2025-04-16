@@ -1,4 +1,4 @@
-package task
+package tag
 
 import (
 	"github.com/EliCDavis/notes/cmd/notes/flags"
@@ -7,16 +7,13 @@ import (
 
 func Command() *cli.Command {
 	return &cli.Command{
-		Name:  "task",
-		Usage: "Create and edit tasks",
+		Name:  "tag",
+		Usage: "Manage tags",
 		Flags: []cli.Flag{
 			flags.Project,
 		},
 		Subcommands: []*cli.Command{
 			newCommand(),
-			listCommand(),
-			updateCommand(),
-			todoCommand(),
 		},
 	}
 }

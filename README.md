@@ -38,6 +38,8 @@ COMMANDS:
    task     Create and edit tasks
    meeting  Create and edit meetings
    topic    Create and edit topics
+   image    Manage images
+   tag      Manage tags
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
@@ -56,8 +58,12 @@ USAGE:
    notes project new [command options] [project name]
 
 OPTIONS:
-   --path value  path to place project (default: "./")
-   --help, -h    show help
+   --path value      path to place project (default: "./")
+   --logs value      path to logs (default: "logs")
+   --tasks value     path to tasks (default: "tasks")
+   --meetings value  path to meetings (default: "meetings")
+   --topics value    path to topics (default: "topics")
+   --help, -h        show help
 ```
 
 Example: 
@@ -77,6 +83,7 @@ USAGE:
 
 OPTIONS:
    --project value  Path to project.json (default: "./project.json")
+   --use-includes   Whether or not to use the markdown-it-include extension (default: false)
    --help, -h       show help
 ```
 
@@ -171,4 +178,48 @@ Example:
 
 ```bash 
 notes task list
+```
+
+### Image
+
+Manage images to be used across your project.
+
+#### Add
+
+```
+NAME:
+   notes image add - Adds an image to the project
+
+USAGE:
+   notes image add [command options] [path to images]
+
+OPTIONS:
+   --help, -h  show help
+```
+
+Example: 
+
+```bash 
+notes image add "image 1.png" "image 2.png"
+```
+
+### Tag
+
+#### New
+
+```
+NAME:
+   notes tag new - Creates tags for the project
+
+USAGE:
+   notes tag new [command options] [name of tags]
+
+OPTIONS:
+   --help, -h  show help
+```
+
+Example
+
+```bash
+notes tag new "Setup" "Research"
 ```

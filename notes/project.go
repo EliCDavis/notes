@@ -1,6 +1,7 @@
 package notes
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -27,11 +28,15 @@ type Project struct {
 	TasksPath    string `json:"taskPath"`
 	MeetingsPath string `json:"meetingPath"`
 	TopicsPath   string `json:"topicPath"`
+	ImagesPath   string `json:"imagePath"`
+	BuildsPath   string `json:"buildPath"`
 
 	Logs     []*Log     `json:"logs"`
 	Tasks    []*Task    `json:"tasks"`
 	Meetings []*Meeting `json:"meetings"`
 	Topics   []*Topic   `json:"topics"`
+	Images   []*Image   `json:"images"`
+	Tags     []*Tag     `json:"tags"`
 
 	// The path to this project on disk
 	loadedPath string
@@ -58,7 +63,7 @@ func (p *Project) ListTasks(out io.Writer) error {
 			statusTime = item.Time
 		}
 
-		_, err := fmt.Fprintf(out, "[%d] %-10s %s - %s\n", i, status, statusTime.Format("2006-01-02 15:04"), task.Name)
+		_, err := fmt.Fprintf(out, "[%d] %-10s %s - %s\n", i+1, status, statusTime.Format("2006-01-02 15:04"), task.Name)
 		if err != nil {
 			return err
 		}
@@ -66,8 +71,64 @@ func (p *Project) ListTasks(out io.Writer) error {
 	return nil
 }
 
-func (p *Project) Compile(writer io.Writer) error {
+func (p *Project) ListTodoTasks(out io.Writer) error {
+	for i, task := range p.Tasks {
+		status := "Created"
+		statusTime := task.Created
+		if len(task.History) > 0 {
+			item := task.History[len(task.History)-1]
+			status = string(item.Status)
+			statusTime = item.Time
+		}
+
+		notFinished := status == "Created" || status == TaskStatus_Started
+		if !notFinished {
+			continue
+		}
+
+		_, err := fmt.Fprintf(out, "[%d] %-10s %s - %s\n", i+1, status, statusTime.Format("2006-01-02 15:04"), task.Name)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type ProjectCompileOptions struct {
+	UseMarkdownItIncludeExtension bool
+	Save                          bool
+}
+
+func (p *Project) Compile(out io.Writer, options ProjectCompileOptions) error {
+
+	writer := bufio.NewWriter(out)
+	if options.Save {
+		folderName := filepath.Join(filepath.Dir(p.loadedPath), p.BuildsPath, time.Now().Format("2006-01-02 15 04"))
+		err := os.MkdirAll(folderName, os.ModeDir)
+		if err != nil {
+			return err
+		}
+
+		f, err := os.Create(filepath.Join(folderName, "Project.md"))
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		writer = bufio.NewWriter(f)
+	}
+
+	useIncludeDirective := options.UseMarkdownItIncludeExtension
+
 	fmt.Fprintf(writer, "# %s\n\n", p.Name)
+
+	fmt.Fprint(writer, "Tags: ")
+	for i, tag := range p.Tags {
+		fmt.Fprint(writer, tag.Name)
+		if i < len(p.Tags)-1 {
+			fmt.Fprint(writer, ", ")
+		}
+	}
+	fmt.Fprint(writer, "\n\n")
 
 	fmt.Fprint(writer, "## Tasks\n\n")
 	for _, task := range p.Tasks {
@@ -81,7 +142,12 @@ func (p *Project) Compile(writer io.Writer) error {
 		fmt.Fprintf(writer, "*Created: %s*\n\n", task.Created)
 
 		for _, item := range task.History {
-			fmt.Fprintf(writer, "* %s: %s*\n", item.Status, item.Time)
+			fmt.Fprintf(writer, "* %s: %s", item.Status, item.Time)
+
+			if item.Reason != "" {
+				fmt.Fprintf(writer, " - %s", item.Reason)
+			}
+			fmt.Fprint(writer, "\n")
 		}
 
 		if len(task.History) > 0 {
@@ -89,11 +155,17 @@ func (p *Project) Compile(writer io.Writer) error {
 		}
 
 		descriptionPath := filepath.Join(filepath.Dir(p.loadedPath), p.TasksPath, task.Path, taskFileName)
-		description, err := os.ReadFile(descriptionPath)
-		if err != nil {
-			return err
+
+		if !useIncludeDirective {
+			description, err := os.ReadFile(descriptionPath)
+			if err != nil {
+				return err
+			}
+			writer.Write(description)
+		} else {
+			fmt.Fprintf(writer, ":[Task](%s)\n", descriptionPath)
 		}
-		writer.Write(description)
+
 		fmt.Fprint(writer, "\n")
 	}
 
@@ -103,12 +175,16 @@ func (p *Project) Compile(writer io.Writer) error {
 		fmt.Fprintf(writer, "### %s\n\n", meeting.Created.Format("2006-01-02 15:04"))
 		fmt.Fprintf(writer, "*Created: %s*\n\n", meeting.Created)
 
-		logPath := filepath.Join(filepath.Dir(p.loadedPath), p.MeetingsPath, meeting.Path, meetingFileName)
-		logData, err := os.ReadFile(logPath)
-		if err != nil {
-			return err
+		meetingPath := filepath.Join(filepath.Dir(p.loadedPath), p.MeetingsPath, meeting.Path, meetingFileName)
+		if !useIncludeDirective {
+			logData, err := os.ReadFile(meetingPath)
+			if err != nil {
+				return err
+			}
+			writer.Write(logData)
+		} else {
+			fmt.Fprintf(writer, ":[Meeting](%s)\n", meetingPath)
 		}
-		writer.Write(logData)
 		fmt.Fprint(writer, "\n")
 	}
 
@@ -118,30 +194,40 @@ func (p *Project) Compile(writer io.Writer) error {
 		fmt.Fprintf(writer, "### %s\n\n", topic.Name)
 		fmt.Fprintf(writer, "*Created: %s*\n\n", topic.Created)
 
-		logPath := filepath.Join(filepath.Dir(p.loadedPath), p.TopicsPath, topic.Path, topicFileName)
-		logData, err := os.ReadFile(logPath)
-		if err != nil {
-			return err
+		topicPath := filepath.Join(filepath.Dir(p.loadedPath), p.TopicsPath, topic.Path, topicFileName)
+
+		if !useIncludeDirective {
+			logData, err := os.ReadFile(topicPath)
+			if err != nil {
+				return err
+			}
+			writer.Write(logData)
+		} else {
+			fmt.Fprintf(writer, ":[Topic](%s)\n", topicPath)
 		}
-		writer.Write(logData)
 		fmt.Fprint(writer, "\n")
 	}
 
 	fmt.Fprint(writer, "## Logs\n\n")
-	for _, log := range p.Logs {
+	for i := len(p.Logs) - 1; i >= 0; i-- {
+		log := p.Logs[i]
 
 		fmt.Fprintf(writer, "### %s\n\n", log.Path)
 		fmt.Fprintf(writer, "*Created: %s*\n\n", log.Created)
 
 		logPath := filepath.Join(filepath.Dir(p.loadedPath), p.LogsPath, log.Path, logFileName)
-		logData, err := os.ReadFile(logPath)
-		if err != nil {
-			return err
+		if !useIncludeDirective {
+			logData, err := os.ReadFile(logPath)
+			if err != nil {
+				return err
+			}
+			writer.Write(logData)
+		} else {
+			fmt.Fprintf(writer, ":[Log](%s)\n", logPath)
 		}
-		writer.Write(logData)
 		fmt.Fprint(writer, "\n")
 	}
-	return nil
+	return writer.Flush()
 }
 
 func (p *Project) NewLog(tags []string) error {
@@ -175,6 +261,31 @@ func (p *Project) NewMeeting() error {
 
 	p.Meetings = append(p.Meetings, meeting)
 	return nil
+}
+
+func (p *Project) AddImage(originalImagePath string) error {
+	t := time.Now()
+	image := &Image{
+		Created:      t,
+		Path:         fmt.Sprintf("%d%s", len(p.Images), filepath.Ext(originalImagePath)),
+		OriginalPath: originalImagePath,
+	}
+
+	imagePath := filepath.Join(filepath.Dir(p.loadedPath), p.ImagesPath, image.Path)
+	err := copyFile(originalImagePath, imagePath)
+	if err != nil {
+		return fmt.Errorf("error creating meeting for project %s: %w", p.Name, err)
+	}
+
+	p.Images = append(p.Images, image)
+	return nil
+}
+
+func (p *Project) AddTag(tagName string) {
+	p.Tags = append(p.Tags, &Tag{
+		Created: time.Now(),
+		Name:    tagName,
+	})
 }
 
 func (p *Project) NewTask(name string) error {
