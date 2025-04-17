@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"time"
 
 	_ "embed"
 )
@@ -14,10 +13,7 @@ const meetingFileName = "README.md"
 //go:embed default_meeting.md
 var defaultMeeting []byte
 
-type Meeting struct {
-	Path    string
-	Created time.Time
-}
+type Meeting Entry
 
 func (l Meeting) initiailzeMarkdown(parentFolder string) error {
 	folder := path.Join(parentFolder, l.Path)

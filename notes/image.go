@@ -1,9 +1,6 @@
 package notes
 
-import "time"
-
 type Image struct {
-	Path         string
-	Created      time.Time
+	Entry
 	OriginalPath string
 }

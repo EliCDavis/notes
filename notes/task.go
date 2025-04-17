@@ -25,10 +25,16 @@ type TaskStatusChange struct {
 }
 
 type Task struct {
+	Entry
 	Name    string
-	Path    string
-	Created time.Time
 	History []*TaskStatusChange `json:"history"`
+}
+
+func (t Task) DisplayName() string {
+	if t.Name == "" {
+		return "[Unnamed]"
+	}
+	return t.Name
 }
 
 func (t Task) initiailzeMarkdown(parentFolder string) error {

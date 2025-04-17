@@ -99,6 +99,32 @@ type ProjectCompileOptions struct {
 	Save                          bool
 }
 
+func (p *Project) compile_toc(out io.Writer) {
+	fmt.Fprint(out, "## Table of Contents\n\n")
+
+	fmt.Fprint(out, "* [Tasks](#tasks)\n")
+	for i, task := range p.Tasks {
+		fmt.Fprintf(out, "    * [%s](#tasks-%d)\n", task.DisplayName(), i)
+	}
+
+	fmt.Fprint(out, "* [Meetings](#meetings)\n")
+	for i, meeting := range p.Meetings {
+		fmt.Fprintf(out, "    * [%s](#meetings-%d)\n", meeting.Created.Format("2006-01-02 15:04"), i)
+	}
+
+	fmt.Fprint(out, "* [Topics](#topics)\n")
+	for i, topic := range p.Topics {
+		fmt.Fprintf(out, "    * [%s](#topics-%d)\n", topic.Name, i)
+	}
+
+	fmt.Fprint(out, "* [Logs](#logs)\n")
+	for i, log := range p.Logs {
+		fmt.Fprintf(out, "    * [%s](#logs-%d)\n", log.Path, i)
+	}
+
+	fmt.Fprint(out, "\n")
+}
+
 func (p *Project) Compile(out io.Writer, options ProjectCompileOptions) error {
 
 	writer := bufio.NewWriter(out)
@@ -130,15 +156,11 @@ func (p *Project) Compile(out io.Writer, options ProjectCompileOptions) error {
 	}
 	fmt.Fprint(writer, "\n\n")
 
-	fmt.Fprint(writer, "## Tasks\n\n")
-	for _, task := range p.Tasks {
+	p.compile_toc(writer)
 
-		taskName := task.Name
-		if taskName == "" {
-			taskName = "[Unnamed]"
-		}
-
-		fmt.Fprintf(writer, "### %s\n\n", taskName)
+	fmt.Fprint(writer, "## <a id=\"tasks\">Tasks</a>\n\n")
+	for i, task := range p.Tasks {
+		fmt.Fprintf(writer, "### <a id=\"tasks-%d\">%s</a>\n\n", i, task.DisplayName())
 		fmt.Fprintf(writer, "*Created: %s*\n\n", task.Created)
 
 		for _, item := range task.History {
@@ -169,10 +191,10 @@ func (p *Project) Compile(out io.Writer, options ProjectCompileOptions) error {
 		fmt.Fprint(writer, "\n")
 	}
 
-	fmt.Fprint(writer, "## Meetings\n\n")
-	for _, meeting := range p.Meetings {
+	fmt.Fprint(writer, "## <a id=\"meetings\">Meetings</a>\n\n")
+	for i, meeting := range p.Meetings {
 
-		fmt.Fprintf(writer, "### %s\n\n", meeting.Created.Format("2006-01-02 15:04"))
+		fmt.Fprintf(writer, "### <a id=\"meetings-%d\">%s</a>\n\n", i, meeting.Created.Format("2006-01-02 15:04"))
 		fmt.Fprintf(writer, "*Created: %s*\n\n", meeting.Created)
 
 		meetingPath := filepath.Join(filepath.Dir(p.loadedPath), p.MeetingsPath, meeting.Path, meetingFileName)
@@ -188,10 +210,10 @@ func (p *Project) Compile(out io.Writer, options ProjectCompileOptions) error {
 		fmt.Fprint(writer, "\n")
 	}
 
-	fmt.Fprint(writer, "## Topics\n\n")
-	for _, topic := range p.Topics {
+	fmt.Fprint(writer, "## <a id=\"topics\">Topics</a>\n\n")
+	for i, topic := range p.Topics {
 
-		fmt.Fprintf(writer, "### %s\n\n", topic.Name)
+		fmt.Fprintf(writer, "### <a id=\"topics-%d\">%s</a>\n\n", i, topic.Name)
 		fmt.Fprintf(writer, "*Created: %s*\n\n", topic.Created)
 
 		topicPath := filepath.Join(filepath.Dir(p.loadedPath), p.TopicsPath, topic.Path, topicFileName)
@@ -208,11 +230,11 @@ func (p *Project) Compile(out io.Writer, options ProjectCompileOptions) error {
 		fmt.Fprint(writer, "\n")
 	}
 
-	fmt.Fprint(writer, "## Logs\n\n")
+	fmt.Fprint(writer, "## <a id=\"logs\">Logs</a>\n\n")
 	for i := len(p.Logs) - 1; i >= 0; i-- {
 		log := p.Logs[i]
 
-		fmt.Fprintf(writer, "### %s\n\n", log.Path)
+		fmt.Fprintf(writer, "### <a id=\"logs-%d\">%s</a>\n\n", i, log.Path)
 		fmt.Fprintf(writer, "*Created: %s*\n\n", log.Created)
 
 		logPath := filepath.Join(filepath.Dir(p.loadedPath), p.LogsPath, log.Path, logFileName)
@@ -266,8 +288,10 @@ func (p *Project) NewMeeting() error {
 func (p *Project) AddImage(originalImagePath string) error {
 	t := time.Now()
 	image := &Image{
-		Created:      t,
-		Path:         fmt.Sprintf("%d%s", len(p.Images), filepath.Ext(originalImagePath)),
+		Entry: Entry{
+			Created: t,
+			Path:    fmt.Sprintf("%d%s", len(p.Images), filepath.Ext(originalImagePath)),
+		},
 		OriginalPath: originalImagePath,
 	}
 
@@ -291,9 +315,11 @@ func (p *Project) AddTag(tagName string) {
 func (p *Project) NewTask(name string) error {
 	t := time.Now()
 	task := &Task{
-		Created: t,
+		Entry: Entry{
+			Created: t,
+			Path:    strconv.Itoa(len(p.Tasks) + 1),
+		},
 		Name:    name,
-		Path:    strconv.Itoa(len(p.Tasks) + 1),
 		History: make([]*TaskStatusChange, 0),
 	}
 
@@ -308,9 +334,11 @@ func (p *Project) NewTask(name string) error {
 
 func (p *Project) NewTopic(name string) error {
 	topic := &Topic{
-		Created: time.Now(),
-		Name:    name,
-		Path:    removeNonAlphanumeric(name),
+		Entry: Entry{
+			Created: time.Now(),
+			Path:    removeNonAlphanumeric(name),
+		},
+		Name: name,
 	}
 
 	err := topic.initiailzeMarkdown(filepath.Join(filepath.Dir(p.loadedPath), p.TopicsPath))

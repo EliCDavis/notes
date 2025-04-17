@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"time"
 )
 
 const topicFileName = "README.md"
 
 type Topic struct {
-	Name    string
-	Path    string
-	Created time.Time
+	Entry
+	Name string
 }
 
 func (l Topic) initiailzeMarkdown(parentFolder string) error {

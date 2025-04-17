@@ -4,16 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"time"
 )
 
 const logFileName = "README.md"
 
-type Log struct {
-	Created time.Time `json:"created"`
-	Path    string    `json:"path"`
-	Tags    []string  `json:"tags"`
-}
+type Log Entry
 
 func (l Log) initiailzeMarkdown(parentFolder string) error {
 	folder := path.Join(parentFolder, l.Path)
