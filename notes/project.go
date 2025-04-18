@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -99,6 +100,57 @@ type ProjectCompileOptions struct {
 	Save                          bool
 }
 
+func roundUpToDays(d time.Duration) int {
+	return int(math.Round(float64(d) / float64(24*time.Hour)))
+}
+
+func (p *Project) TaskGantt(out io.Writer) {
+	now := time.Now()
+
+	fmt.Fprintln(out, "gantt")
+	fmt.Fprintln(out, "    title Task Work History")
+	fmt.Fprintln(out, "    dateFormat  YYYY-MM-DD")
+	fmt.Fprintln(out, "    excludes weekends")
+
+	for i, t := range p.Tasks {
+		status := ""
+		completed := ""
+		var latest *TaskStatusChange
+		if len(t.History) > 0 {
+			latest = t.History[len(t.History)-1]
+			switch latest.Status {
+			case TaskStatus_Started:
+				status = "active,"
+
+			case TaskStatus_Completed:
+				status = "done,"
+				completed = latest.Time.Format("2006-01-02")
+
+			case TaskStatus_Abandoned:
+				continue
+			}
+		}
+
+		started := ""
+		for _, history := range t.History {
+			if history.Status == TaskStatus_Started {
+				started = history.Time.Format("2006-01-02")
+				break
+			}
+		}
+
+		if started == "" {
+			continue
+		}
+
+		if status == "active," {
+			completed = fmt.Sprintf("%dd", roundUpToDays(now.Sub(latest.Time)))
+		}
+
+		fmt.Fprintf(out, "    %s :%s desc%d, %s, %s\n", t.DisplayName(), status, i, started, completed)
+	}
+}
+
 func (p *Project) compile_toc(out io.Writer) {
 	fmt.Fprint(out, "## Table of Contents\n\n")
 
@@ -159,6 +211,11 @@ func (p *Project) Compile(out io.Writer, options ProjectCompileOptions) error {
 	p.compile_toc(writer)
 
 	fmt.Fprint(writer, "## <a id=\"tasks\">Tasks</a>\n\n")
+
+	fmt.Fprint(writer, "```mermaid\n")
+	p.TaskGantt(writer)
+	fmt.Fprint(writer, "```\n\n")
+
 	for i, task := range p.Tasks {
 		fmt.Fprintf(writer, "### <a id=\"tasks-%d\">%s</a>\n\n", i, task.DisplayName())
 		fmt.Fprintf(writer, "*Created: %s*\n\n", task.Created)

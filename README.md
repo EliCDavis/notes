@@ -180,6 +180,26 @@ Example:
 notes task list
 ```
 
+#### Gantt
+
+```
+NAME:
+   notes task gantt - create a gantt chart in mermaid
+
+USAGE:
+   notes task gantt [command options]
+
+OPTIONS:
+   --help, -h  show help
+```
+
+Example: 
+
+```bash 
+notes task gantt
+```
+
+
 ### Image
 
 Manage images to be used across your project.

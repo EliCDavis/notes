@@ -17,6 +17,7 @@ func Command() *cli.Command {
 			listCommand(),
 			updateCommand(),
 			todoCommand(),
+			ganttCommand(),
 		},
 	}
 }
