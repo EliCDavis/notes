@@ -114,6 +114,25 @@ Example:
 notes log new
 ```
 
+#### Open
+
+```
+NAME:
+   notes log open - Opens the current log for the day, or creates one if it hasn't been created yet
+
+USAGE:
+   notes log open [command options]
+
+OPTIONS:
+   --help, -h  show help
+```
+
+Example:
+
+```bash
+notes log open
+```
+
 ### Task
 
 #### New

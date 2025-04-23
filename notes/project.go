@@ -326,6 +326,19 @@ func (p *Project) NewLog(tags []string) error {
 	return nil
 }
 
+func (p *Project) OpenLog() error {
+	t := time.Now()
+	logPath := t.Format("2006-01-02")
+	for _, log := range p.Logs {
+		if log.Path == logPath {
+			openURL(filepath.Join(filepath.Dir(p.loadedPath), p.LogsPath, logPath, logFileName))
+			return nil
+		}
+	}
+
+	return p.NewLog(nil)
+}
+
 func (p *Project) NewMeeting() error {
 	t := time.Now()
 	meeting := &Meeting{

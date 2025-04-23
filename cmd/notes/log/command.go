@@ -14,6 +14,7 @@ func Command() *cli.Command {
 		},
 		Subcommands: []*cli.Command{
 			newCommand(),
+			openCommand(),
 		},
 	}
 }
