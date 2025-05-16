@@ -46,7 +46,7 @@ type Project struct {
 func (p Project) SetupFS(parentFolder string) error {
 	projectFolderName := removeNonAlphanumeric(p.Name)
 	folder := filepath.Join(parentFolder, projectFolderName)
-	err := os.Mkdir(folder, os.ModeDir)
+	err := os.MkdirAll(folder, os.ModeDir)
 	if err != nil {
 		return fmt.Errorf("unable to create project folder %s: %w", folder, err)
 	}
@@ -65,6 +65,17 @@ func (p *Project) ListTasks(out io.Writer) error {
 		}
 
 		_, err := fmt.Fprintf(out, "[%d] %-10s %s - %s\n", i+1, status, statusTime.Format("2006-01-02 15:04"), task.Name)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *Project) ListTags(out io.Writer) error {
+	for i, tag := range p.Tags {
+		statusTime := tag.Created
+		_, err := fmt.Fprintf(out, "[%d] Created %s - %s\n", i+1, statusTime.Format("2006-01-02 15:04"), tag.Name)
 		if err != nil {
 			return err
 		}
