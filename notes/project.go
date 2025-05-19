@@ -43,10 +43,10 @@ type Project struct {
 	loadedPath string
 }
 
-func (p Project) SetupFS(parentFolder string) error {
+func (p Project) SetupFS(parentFolder string, mode os.FileMode) error {
 	projectFolderName := removeNonAlphanumeric(p.Name)
 	folder := filepath.Join(parentFolder, projectFolderName)
-	err := os.MkdirAll(folder, os.ModeDir)
+	err := os.MkdirAll(folder, mode)
 	if err != nil {
 		return fmt.Errorf("unable to create project folder %s: %w", folder, err)
 	}

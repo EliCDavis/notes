@@ -2,6 +2,9 @@ package project
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/EliCDavis/notes/notes"
 	"github.com/urfave/cli/v2"
@@ -49,12 +52,24 @@ func newCommand() *cli.Command {
 				Usage: "path to compiled project reports",
 				Value: "builds",
 			},
+			&cli.StringFlag{
+				Name:  "mode",
+				Usage: "file mode for created directories",
+				Value: "0755",
+			},
 		},
 		Action: func(ctx *cli.Context) error {
 			args := ctx.Args()
 			if args.Len() != 1 {
 				return errors.New("expected project name")
 			}
+
+			modeStr := ctx.String("mode")
+			modeVal, err := strconv.ParseUint(modeStr, 8, 32)
+			if err != nil {
+				return fmt.Errorf("invalid file mode: %w", err)
+			}
+			mode := os.FileMode(modeVal)
 
 			newProject := notes.Project{
 				Name:         args.First(),
@@ -66,7 +81,7 @@ func newCommand() *cli.Command {
 				BuildsPath:   ctx.String("builds"),
 			}
 
-			return newProject.SetupFS(ctx.String("path"))
+			return newProject.SetupFS(ctx.String("path"), mode)
 		},
 	}
 }
