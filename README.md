@@ -17,6 +17,10 @@ foo@bar:MyExampleProject$ notes log new # Create a new daily log
 foo@bar:MyExampleProject$ notes meeting new # Create meeting notes
 foo@bar:MyExampleProject$ notes topic new "Some Topic" # Create a new topic
 foo@bar:MyExampleProject$ notes task new "Task to Complete" # Create a new task
+foo@bar:MyExampleProject$ notes task start 1 # Start a task
+foo@bar:MyExampleProject$ notes task stop  1 # Stop a task
+foo@bar:MyExampleProject$ notes task complete 1  # Make a task as complete
+foo@bar:MyExampleProject$ notes task abandon 1 "Reason for abdonment" # Abandon a certain task
 foo@bar:MyExampleProject$ notes project compile # Compile notes to single markdown
 ```
 

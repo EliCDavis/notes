@@ -18,6 +18,11 @@ func Command() *cli.Command {
 			updateCommand(),
 			todoCommand(),
 			ganttCommand(),
+
+			startCommand(),
+			stopCommand(),
+			completeCommand(),
+			abandonCommand(),
 		},
 	}
 }
