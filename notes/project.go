@@ -181,8 +181,15 @@ func (p *Project) compile_toc(out io.Writer) {
 	}
 
 	fmt.Fprint(out, "* [Logs](#logs)\n")
+	previousMonth := time.Month(0) // January is 1, leaving 0 to be undefined
+
 	for i, log := range p.Logs {
-		fmt.Fprintf(out, "    * [%s](#logs-%d)\n", log.Path, i)
+		if previousMonth != log.Created.Month() {
+			previousMonth = log.Created.Month()
+			fmt.Fprintf(out, "    * %s\n", log.Created.Format("January 2006"))
+		}
+
+		fmt.Fprintf(out, "        * [%s](#logs-%d)\n", log.Path, i)
 	}
 
 	fmt.Fprint(out, "\n")
