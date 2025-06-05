@@ -93,8 +93,30 @@ func (p *Project) ListTodoTasks(out io.Writer) error {
 			statusTime = item.Time
 		}
 
-		notFinished := status == "Created" || status == TaskStatus_Started
+		notFinished := status == "Created" || status == TaskStatus_Started || status == TaskStatus_Stopped
 		if !notFinished {
+			continue
+		}
+
+		_, err := fmt.Fprintf(out, "[%d] %-10s %s - %s\n", i+1, status, statusTime.Format("2006-01-02 15:04"), task.Name)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *Project) ListCurrentTasks(out io.Writer) error {
+	for i, task := range p.Tasks {
+		status := "Created"
+		statusTime := task.Created
+		if len(task.History) > 0 {
+			item := task.History[len(task.History)-1]
+			status = string(item.Status)
+			statusTime = item.Time
+		}
+
+		if status != TaskStatus_Started {
 			continue
 		}
 
