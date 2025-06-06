@@ -1,13 +1,10 @@
 package notes
 
 import (
+	"bufio"
 	"fmt"
-	"os"
-	"path"
 	"time"
 )
-
-const taskFileName = "Description.md"
 
 type TaskStatus string
 
@@ -37,22 +34,19 @@ func (t Task) DisplayName() string {
 	return t.Name
 }
 
-func (t Task) initiailzeMarkdown(parentFolder string) error {
-	folder := path.Join(parentFolder, t.Path)
-	err := os.MkdirAll(folder, os.ModeDir)
-	if err != nil {
-		return fmt.Errorf("unable to create tasks's directory: %w", err)
+func (t Task) toProjectMarkdown(writer *bufio.Writer) error {
+	for _, item := range t.History {
+		fmt.Fprintf(writer, "* %s: %s", item.Status, item.Time)
+
+		if item.Reason != "" {
+			fmt.Fprintf(writer, " - %s", item.Reason)
+		}
+		fmt.Fprint(writer, "\n")
 	}
 
-	markdownPath := path.Join(folder, taskFileName)
-	file, err := os.Create(markdownPath)
-	if err != nil {
-		return fmt.Errorf("unable to create log's markdown file: %w", err)
+	if len(t.History) > 0 {
+		fmt.Fprint(writer, "\n")
 	}
-	defer file.Close()
 
-	openURL(markdownPath)
-
-	_, err = fmt.Fprintf(file, "<!-- Created: %s --> \n", t.Created)
-	return err
+	return nil
 }

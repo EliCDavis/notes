@@ -8,7 +8,12 @@ import (
 
 	"github.com/EliCDavis/notes/notes"
 	"github.com/urfave/cli/v2"
+
+	_ "embed"
 )
+
+//go:embed default_meeting.md
+var defaultMeeting []byte
 
 func newCommand() *cli.Command {
 	return &cli.Command{
@@ -72,13 +77,38 @@ func newCommand() *cli.Command {
 			mode := os.FileMode(modeVal)
 
 			newProject := notes.Project{
-				Name:         args.First(),
-				LogsPath:     ctx.String("logs"),
-				TasksPath:    ctx.String("tasks"),
-				TopicsPath:   ctx.String("topics"),
-				MeetingsPath: ctx.String("meetings"),
-				ImagesPath:   ctx.String("images"),
-				BuildsPath:   ctx.String("builds"),
+				Name: args.First(),
+
+				ImagesPath: ctx.String("images"),
+				BuildsPath: ctx.String("builds"),
+
+				LogFolderContent: &notes.FolderContents{
+					Folder: ctx.String("logs"),
+					Entries: []notes.FolderContentEntry{
+						{FileName: "README.md"},
+					},
+				},
+
+				TaskFolderContent: &notes.FolderContents{
+					Folder: ctx.String("tasks"),
+					Entries: []notes.FolderContentEntry{
+						{FileName: "Description.md"},
+					},
+				},
+
+				TopicFolderContent: &notes.FolderContents{
+					Folder: ctx.String("topics"),
+					Entries: []notes.FolderContentEntry{
+						{FileName: "README.md"},
+					},
+				},
+
+				MeetingFolderContent: &notes.FolderContents{
+					Folder: ctx.String("meetings"),
+					Entries: []notes.FolderContentEntry{
+						{FileName: "Summary.md", Content: string(defaultMeeting)},
+					},
+				},
 			}
 
 			return newProject.SetupFS(ctx.String("path"), mode)
