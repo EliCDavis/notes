@@ -73,6 +73,18 @@ func (p *Project) ListTasks(out io.Writer) error {
 	return nil
 }
 
+func (p *Project) ListTopics(out io.Writer) error {
+	for i, topic := range p.Topics {
+		statusTime := topic.Created
+
+		_, err := fmt.Fprintf(out, "[%d] %s - %s\n", i+1, statusTime.Format("2006-01-02 15:04"), topic.Name)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (p *Project) ListTags(out io.Writer) error {
 	for i, tag := range p.Tags {
 		statusTime := tag.Created
